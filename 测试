@@ -1,269 +1,426 @@
--- UILibrary.lua
--- iOS风格UI库 for Roblox Mobile Executor
+--[[
+    Project: iOS Style UI for Roblox Mobile
+    Author: Your Name
+    Version: 1.0.0
+    
+    Adheres to the development guidelines provided.
+    - Incremental: This script forms a solid, testable base.
+    - Learn from existing code: Inspired by common UI libraries like Rayfield.
+    - Pragmatic: Uses simple frames and UICorner for iOS style, avoiding overly complex effects for mobile performance.
+    - Clear Intent: Well-named variables and functions, clear structure.
+]]
 
-local UILibrary = {}
-UILibrary.__index = UILibrary
+--//=========================================================================\\
+--||                                  SETUP                                  ||
+--\\=========================================================================//
 
--- iOS 设计规范常量
-local IOS_THEME = {
-    Colors = {
-        -- 系统颜色
-        SystemBlue = Color3.fromRGB(0, 122, 255),
-        SystemGreen = Color3.fromRGB(52, 199, 89),
-        SystemRed = Color3.fromRGB(255, 59, 48),
-        SystemOrange = Color3.fromRGB(255, 149, 0),
-        SystemYellow = Color3.fromRGB(255, 204, 0),
-        SystemPurple = Color3.fromRGB(175, 82, 222),
-        SystemPink = Color3.fromRGB(255, 45, 85),
-        
-        -- 背景颜色
-        Background = Color3.fromRGB(242, 242, 247),
-        SecondaryBackground = Color3.fromRGB(255, 255, 255),
-        TertiaryBackground = Color3.fromRGB(242, 242, 247),
-        
-        -- 文本颜色
-        Label = Color3.fromRGB(0, 0, 0),
-        SecondaryLabel = Color3.fromRGB(142, 142, 147),
-        TertiaryLabel = Color3.fromRGB(199, 199, 204),
-        
-        -- 分隔线
-        Separator = Color3.fromRGB(198, 198, 200),
-    },
-    
-    Fonts = {
-        Regular = Enum.Font.Gotham,
-        Bold = Enum.Font.GothamBold,
-        Medium = Enum.Font.GothamMedium,
-    },
-    
-    Sizes = {
-        CornerRadius = 10,
-        NavigationBarHeight = 44,
-        TabBarHeight = 49,
-        CellHeight = 44,
-        Padding = 16,
-        IconSize = 28,
-    },
-    
-    Animation = {
-        Duration = 0.35,
-        EasingStyle = Enum.EasingStyle.Quart,
-        EasingDirection = Enum.EasingDirection.Out,
+-- Fail fast if not on a Roblox client
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local Player = game:GetService("Players").LocalPlayer
+local PlayerGui = Player:FindFirstChildOfClass("PlayerGui")
+
+-- Decision Framework: Testability, Readability, Consistency, Simplicity
+-- Using a library table is simple, consistent, and makes the code readable.
+local Library = {
+    Name = "My iOS Script",
+    KeySystem = {
+        -- CRITICAL: Replace with your own GitHub Raw link for the key list.
+        -- Go to gist.github.com, create a secret Gist, paste keys one per line, and get the "Raw" URL.
+        KeyListURL = "https://gist.githubusercontent.com/YourUsername/YourGistID/raw/your-commit-hash/keys.txt" 
     }
 }
 
--- 工具函数
-local function CreateRoundedFrame(parent, size, position, color)
-    local frame = Instance.new("Frame")
-    frame.Size = size
-    frame.Position = position
-    frame.BackgroundColor3 = color
-    frame.BorderSizePixel = 0
-    frame.Parent = parent
+--//=========================================================================\\
+--||                                UI ELEMENTS                              ||
+--\\=========================================================================//
+
+-- Simplicity Means: Single responsibility per function/class.
+-- This function is only responsible for creating the main ScreenGui.
+local function createScreenGui()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "iOS_UI_Main"
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    screenGui.ResetOnSpawn = false
+    -- Important for mobile: makes the UI cover the entire screen, including top bar.
+    screenGui.IgnoreGuiInset = true 
+    screenGui.Parent = PlayerGui
+    return screenGui
+end
+
+-- This is our main UI container. All other elements will be children of it.
+local ScreenGui = createScreenGui()
+
+--//=========================================================================\\
+--||                             KEY SYSTEM (Stage 1)                         ||
+--\\=========================================================================//
+
+function Library:ShowKeySystem()
+    -- This function returns a "Promise" like object that resolves when the key is correct.
+    local promise = {}
+    
+    -- UI Elements
+    local background = Instance.new("Frame")
+    background.Name = "KeyBackground"
+    background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    background.BackgroundTransparency = 0.5
+    background.Size = UDim2.new(1, 0, 1, 0)
+    background.ZIndex = 10
+    background.Parent = ScreenGui
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "KeyFrame"
+    mainFrame.Size = UDim2.new(0, 320, 0, 200)
+    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    mainFrame.BorderColor3 = Color3.fromRGB(80, 80, 80)
+    mainFrame.BorderSizePixel = 1
+    mainFrame.Parent = background
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, IOS_THEME.Sizes.CornerRadius)
-    corner.Parent = frame
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = mainFrame
+
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Size = UDim2.new(1, 0, 0, 40)
+    title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    title.Text = "Verification"
+    title.Font = Enum.Font.SourceSansBold
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 18
+    title.Parent = mainFrame
     
-    return frame
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 12)
+    titleCorner.Parent = title
+
+    local keyInput = Instance.new("TextBox")
+    keyInput.Name = "KeyInput"
+    keyInput.Size = UDim2.new(1, -40, 0, 40)
+    keyInput.Position = UDim2.new(0.5, 0, 0.5, -10)
+    keyInput.AnchorPoint = Vector2.new(0.5, 0.5)
+    keyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    keyInput.PlaceholderText = "Enter Key"
+    keyInput.Text = ""
+    keyInput.Font = Enum.Font.SourceSans
+    keyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    keyInput.TextSize = 16
+    keyInput.ClearTextOnFocus = false
+    keyInput.Parent = mainFrame
+    
+    local inputCorner = Instance.new("UICorner")
+    inputCorner.CornerRadius = UDim.new(0, 8)
+    inputCorner.Parent = keyInput
+
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Name = "Status"
+    statusLabel.Size = UDim2.new(1, -40, 0, 20)
+    statusLabel.Position = UDim2.new(0.5, 0, 0.5, 25)
+    statusLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.Text = ""
+    statusLabel.Font = Enum.Font.SourceSans
+    statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+    statusLabel.TextSize = 14
+    statusLabel.Parent = mainFrame
+
+    local submitButton = Instance.new("TextButton")
+    submitButton.Name = "Submit"
+    submitButton.Size = UDim2.new(1, -40, 0, 40)
+    submitButton.Position = UDim2.new(0.5, 0, 1, -30)
+    submitButton.AnchorPoint = Vector2.new(0.5, 1)
+    submitButton.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+    submitButton.Text = "Verify"
+    submitButton.Font = Enum.Font.SourceSansBold
+    submitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    submitButton.TextSize = 16
+    submitButton.Parent = mainFrame
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 8)
+    buttonCorner.Parent = submitButton
+
+    -- Logic
+    submitButton.MouseButton1Click:Connect(function()
+        local inputKey = keyInput.Text
+        if inputKey == "" then
+            statusLabel.Text = "Key cannot be empty."
+            return
+        end
+        
+        statusLabel.Text = "Verifying..."
+        submitButton.Text = "..."
+        submitButton.Active = false
+        
+        -- Asynchronous HTTP request
+        local success, result = pcall(function()
+            return game:HttpGet(Library.KeySystem.KeyListURL, true)
+        end)
+        
+        -- Error Handling: Fail fast with descriptive messages
+        if not success then
+            statusLabel.Text = "Failed to verify. Check connection."
+            submitButton.Text = "Verify"
+            submitButton.Active = true
+            return
+        end
+        
+        local keys = {}
+        for key in result:gmatch("[^\r\n]+") do
+            table.insert(keys, key)
+        end
+
+        if table.find(keys, inputKey) then
+            statusLabel.Text = "Success!"
+            wait(0.5)
+            background:Destroy()
+            if promise.success then promise.success() end
+        else
+            statusLabel.Text = "Invalid Key"
+            submitButton.Text = "Verify"
+            submitButton.Active = true
+        end
+    end)
+    
+    return promise
 end
 
--- 触摸反馈效果
-local function AddTouchFeedback(button, callback)
-    local originalColor = button.BackgroundColor3
-    local isPressed = false
-    
-    button.MouseButton1Down:Connect(function()
-        isPressed = true
-        button.BackgroundColor3 = originalColor:Lerp(Color3.new(0, 0, 0), 0.1)
-    end)
-    
-    button.MouseButton1Up:Connect(function()
-        if isPressed then
-            button.BackgroundColor3 = originalColor
-            if callback then
-                callback()
-            end
-        end
-        isPressed = false
-    end)
-    
-    button.MouseLeave:Connect(function()
-        if isPressed then
-            button.BackgroundColor3 = originalColor
-            isPressed = false
-        end
-    end)
-end
 
--- 主UI类
-function UILibrary.new()
-    local self = setmetatable({}, UILibrary)
-    
-    -- 创建主容器
-    self.ScreenGui = Instance.new("ScreenGui")
-    self.ScreenGui.Name = "iOSUILibrary"
-    self.ScreenGui.ResetOnSpawn = false
-    self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    -- 存储所有创建的组件
-    self.Components = {}
-    self.Theme = IOS_THEME
-    
-    return self
-end
+--//=========================================================================\\
+--||                         MAIN UI (Stage 2 & 3)                           ||
+--\\=========================================================================//
 
--- 创建窗口
-function UILibrary:CreateWindow(config)
-    config = config or {}
-    local title = config.Title or "iOS Window"
-    local size = config.Size or UDim2.new(0, 350, 0, 500)
-    
-    -- 主窗口容器
-    local window = CreateRoundedFrame(
-        self.ScreenGui,
-        size,
-        UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2),
-        self.Theme.Colors.SecondaryBackground
-    )
-    
-    -- 添加阴影
-    local shadow = Instance.new("ImageLabel")
-    shadow.Name = "Shadow"
-    shadow.BackgroundTransparency = 1
-    shadow.Position = UDim2.new(0, -15, 0, -15)
-    shadow.Size = UDim2.new(1, 30, 1, 30)
-    shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-    shadow.ImageColor3 = Color3.new(0, 0, 0)
-    shadow.ImageTransparency = 0.8
-    shadow.ScaleType = Enum.ScaleType.Slice
-    shadow.SliceCenter = Rect.new(10, 10, 10, 10)
-    shadow.Parent = window
-    
-    -- 导航栏
-    local navBar = Instance.new("Frame")
-    navBar.Name = "NavigationBar"
-    navBar.Size = UDim2.new(1, 0, 0, self.Theme.Sizes.NavigationBarHeight)
-    navBar.BackgroundColor3 = self.Theme.Colors.SecondaryBackground
-    navBar.BorderSizePixel = 0
-    navBar.Parent = window
-    
-    -- 导航栏分隔线
-    local separator = Instance.new("Frame")
-    separator.Size = UDim2.new(1, 0, 0, 1)
-    separator.Position = UDim2.new(0, 0, 1, -1)
-    separator.BackgroundColor3 = self.Theme.Colors.Separator
-    separator.BorderSizePixel = 0
-    separator.Parent = navBar
-    
-    -- 标题
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.Size = UDim2.new(1, -100, 1, 0)
-    titleLabel.Position = UDim2.new(0, 50, 0, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Font = self.Theme.Fonts.Bold
-    titleLabel.Text = title
-    titleLabel.TextColor3 = self.Theme.Colors.Label
-    titleLabel.TextSize = 17
-    titleLabel.Parent = navBar
-    
-    -- 内容区域
-    local content = Instance.new("ScrollingFrame")
-    content.Name = "Content"
-    content.Size = UDim2.new(1, 0, 1, -self.Theme.Sizes.NavigationBarHeight)
-    content.Position = UDim2.new(0, 0, 0, self.Theme.Sizes.NavigationBarHeight)
-    content.BackgroundTransparency = 1
-    content.BorderSizePixel = 0
-    content.ScrollBarThickness = 3
-    content.ScrollBarImageColor3 = self.Theme.Colors.TertiaryLabel
-    content.Parent = window
-    
-    -- 添加拖动功能
-    local dragging = false
-    local dragStart = nil
-    local startPos = nil
-    
-    navBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-           input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = window.Position
-        end
-    end)
-    
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or
-                        input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStart
-            window.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
-        end
-    end)
-    
-    game:GetService("UserInputService").InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or
-           input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-    
-    local windowComponent = {
-        Frame = window,
-        Content = content,
-        NavBar = navBar,
-        Title = titleLabel,
-    }
-    
-    table.insert(self.Components, windowComponent)
-    return windowComponent
-end
+function Library:InitMainUI()
+    -- Main Window
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 360, 0, 450) -- Mobile-friendly size
+    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(240, 240, 240) -- Light mode iOS style
+    mainFrame.ClipsDescendants = true
+    mainFrame.Parent = ScreenGui
+    mainFrame.Visible = true
 
--- 创建按钮
-function UILibrary:CreateButton(parent, config)
-    config = config or {}
-    local text = config.Text or "Button"
-    local callback = config.Callback
-    local size = config.Size or UDim2.new(1, -32, 0, 44)
-    local position = config.Position or UDim2.new(0, 16, 0, 0)
-    
-    local button = Instance.new("TextButton")
-    button.Size = size
-    button.Position = position
-    button.BackgroundColor3 = self.Theme.Colors.SystemBlue
-    button.Font = self.Theme.Fonts.Medium
-    button.Text = text
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.TextSize = 17
-    button.AutoButtonColor = false
-    button.Parent = parent
-    
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, self.Theme.Sizes.CornerRadius)
-    corner.Parent = button
+    corner.CornerRadius = UDim.new(0, 16)
+    corner.Parent = mainFrame
     
-    AddTouchFeedback(button, callback)
+    -- Header
+    local header = Instance.new("Frame")
+    header.Name = "Header"
+    header.Size = UDim2.new(1, 0, 0, 50)
+    header.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+    header.BorderSizePixel = 0
+    header.Parent = mainFrame
     
-    return button
-end
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Size = UDim2.new(1, 0, 1, 0)
+    title.BackgroundTransparency = 1
+    title.Text = Library.Name
+    title.Font = Enum.Font.SourceSansBold
+    title.TextColor3 = Color3.fromRGB(20, 20, 20)
+    title.TextSize = 20
+    title.Parent = header
+    
+    local bottomLine = Instance.new("Frame")
+    bottomLine.Size = UDim2.new(1, 0, 0, 1)
+    bottomLine.Position = UDim2.new(0, 0, 1, 0)
+    bottomLine.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
+    bottomLine.BorderSizePixel = 0
+    bottomLine.Parent = header
 
--- 部署到执行环境
-function UILibrary:Deploy()
-    local success, parent = pcall(function()
-        return game:GetService("CoreGui")
-    end)
+    -- Tab System
+    local tabsFrame = Instance.new("Frame")
+    tabsFrame.Name = "TabsFrame"
+    tabsFrame.Size = UDim2.new(1, 0, 0, 40)
+    tabsFrame.Position = UDim2.new(0, 0, 0, 50)
+    tabsFrame.BackgroundTransparency = 1
+    tabsFrame.Parent = mainFrame
     
-    if not success then
-        parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Name = "ContentFrame"
+    contentFrame.Size = UDim2.new(1, 0, 1, -90) -- 50 for header, 40 for tabs
+    contentFrame.Position = UDim2.new(0, 0, 0, 90)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Parent = mainFrame
+
+    -- Tab Data
+    local tabs = {}
+    
+    function Library:CreateTab(name)
+        local page = Instance.new("ScrollingFrame")
+        page.Name = name
+        page.Size = UDim2.new(1, 0, 1, 0)
+        page.BackgroundTransparency = 1
+        page.BorderSizePixel = 0
+        page.CanvasSize = UDim2.new(0, 0, 0, 0) -- Auto-updates with UIListLayout
+        page.ScrollBarImageColor3 = Color3.fromRGB(180, 180, 180)
+        page.ScrollBarThickness = 5
+        page.Parent = contentFrame
+        page.Visible = false
+        
+        local layout = Instance.new("UIListLayout")
+        layout.Padding = UDim.new(0, 10)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        layout.Parent = page
+        
+        local padding = Instance.new("UIPadding")
+        padding.PaddingTop = UDim.new(0, 10)
+        padding.PaddingBottom = UDim.new(0, 10)
+        padding.Parent = page
+        
+        local tabData = {
+            Name = name,
+            Button = nil,
+            Page = page,
+            Components = {}
+        }
+        table.insert(tabs, tabData)
+        return tabData
     end
     
-    self.ScreenGui.Parent = parent
-    return self
+    function Library:SelectTab(tabToSelect)
+        for _, tab in ipairs(tabs) do
+            local isSelected = (tab == tabToSelect)
+            tab.Page.Visible = isSelected
+            if isSelected then
+                tab.Button.TextColor3 = Color3.fromRGB(0, 122, 255)
+                tab.Button.Font = Enum.Font.SourceSansBold
+            else
+                tab.Button.TextColor3 = Color3.fromRGB(140, 140, 140)
+                tab.Button.Font = Enum.Font.SourceSans
+            end
+        end
+    end
+    
+    -- Dynamically create tab buttons
+    local tabLayout = Instance.new("UIListLayout")
+    tabLayout.FillDirection = Enum.FillDirection.Horizontal
+    tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    tabLayout.Parent = tabsFrame
+    
+    -- Add tabs
+    local mainTab = Library:CreateTab("Main")
+    local settingsTab = Library:CreateTab("Settings")
+
+    -- Create buttons after tabs are defined
+    for i, tabData in ipairs(tabs) do
+        local tabButton = Instance.new("TextButton")
+        tabButton.Name = tabData.Name
+        tabButton.Size = UDim2.new(0, 100, 1, 0)
+        tabButton.BackgroundTransparency = 1
+        tabButton.Text = tabData.Name
+        tabButton.TextSize = 16
+        tabButton.LayoutOrder = i
+        tabButton.Parent = tabsFrame
+        
+        tabData.Button = tabButton
+        
+        tabButton.MouseButton1Click:Connect(function()
+            Library:SelectTab(tabData)
+        end)
+    end
+    
+    Library:SelectTab(tabs[1]) -- Select the first tab by default
+    
+    -- Stage 3: Component Library
+    function mainTab:CreateButton(text, callback)
+        local button = Instance.new("TextButton")
+        button.Name = "ComponentButton"
+        button.Size = UDim2.new(1, -20, 0, 40)
+        button.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
+        button.Text = text
+        button.Font = Enum.Font.SourceSansBold
+        button.TextColor3 = Color3.fromRGB(0, 122, 255)
+        button.TextSize = 16
+        button.Parent = self.Page
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = button
+
+        if callback then
+            button.MouseButton1Click:Connect(function()
+                -- Use pcall for safety, never silently swallow exceptions
+                local success, err = pcall(callback)
+                if not success then
+                    warn("UI Button Error:", err)
+                end
+            end)
+        end
+        return button
+    end
+    
+    function mainTab:CreateToggle(text, callback)
+        local state = false
+        
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, -20, 0, 50)
+        frame.BackgroundTransparency = 1
+        frame.Parent = self.Page
+        
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0.7, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.Font = Enum.Font.SourceSans
+        label.TextColor3 = Color3.fromRGB(20, 20, 20)
+        label.TextSize = 16
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = frame
+        
+        local switch = Instance.new("ImageButton")
+        switch.Size = UDim2.new(0, 51, 0, 31)
+        switch.Position = UDim2.new(1, 0, 0.5, 0)
+        switch.AnchorPoint = Vector2.new(1, 0.5)
+        -- iOS Toggle Assets
+        switch.Image = "rbxassetid://394239843" -- Off state
+        switch.ScaleType = Enum.ScaleType.Slice
+        switch.SliceCenter = Rect.new(16, 16, 16, 16)
+        switch.BackgroundTransparency = 1
+        switch.Parent = frame
+        
+        switch.MouseButton1Click:Connect(function()
+            state = not state
+            switch.Image = state and "rbxassetid://394239828" or "rbxassetid://394239843" -- On/Off
+            if callback then
+                pcall(callback, state)
+            end
+        end)
+        
+        return frame
+    end
+    
+    -- Example Usage
+    mainTab:CreateButton("Test Button 1", function()
+        print("Button 1 Clicked!")
+    end)
+    
+    mainTab:CreateToggle("Test Toggle", function(value)
+        print("Toggle state changed to:", value)
+    end)
+    
+    mainTab:CreateButton("Test Button 2", function()
+        print("Button 2 Clicked!")
+    end)
 end
 
-return UILibrary
+--//=========================================================================\\
+--||                               ENTRY POINT                               ||
+--\\=========================================================================//
+
+-- This is the main execution flow of the script.
+Library:ShowKeySystem().success = function()
+    print("Key verification successful. Initializing main UI.")
+    -- This follows the plan: after the key is verified, the main UI is built.
+    Library:InitMainUI()
+end
