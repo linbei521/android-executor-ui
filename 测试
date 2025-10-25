@@ -1,0 +1,269 @@
+-- UILibrary.lua
+-- iOS风格UI库 for Roblox Mobile Executor
+
+local UILibrary = {}
+UILibrary.__index = UILibrary
+
+-- iOS 设计规范常量
+local IOS_THEME = {
+    Colors = {
+        -- 系统颜色
+        SystemBlue = Color3.fromRGB(0, 122, 255),
+        SystemGreen = Color3.fromRGB(52, 199, 89),
+        SystemRed = Color3.fromRGB(255, 59, 48),
+        SystemOrange = Color3.fromRGB(255, 149, 0),
+        SystemYellow = Color3.fromRGB(255, 204, 0),
+        SystemPurple = Color3.fromRGB(175, 82, 222),
+        SystemPink = Color3.fromRGB(255, 45, 85),
+        
+        -- 背景颜色
+        Background = Color3.fromRGB(242, 242, 247),
+        SecondaryBackground = Color3.fromRGB(255, 255, 255),
+        TertiaryBackground = Color3.fromRGB(242, 242, 247),
+        
+        -- 文本颜色
+        Label = Color3.fromRGB(0, 0, 0),
+        SecondaryLabel = Color3.fromRGB(142, 142, 147),
+        TertiaryLabel = Color3.fromRGB(199, 199, 204),
+        
+        -- 分隔线
+        Separator = Color3.fromRGB(198, 198, 200),
+    },
+    
+    Fonts = {
+        Regular = Enum.Font.Gotham,
+        Bold = Enum.Font.GothamBold,
+        Medium = Enum.Font.GothamMedium,
+    },
+    
+    Sizes = {
+        CornerRadius = 10,
+        NavigationBarHeight = 44,
+        TabBarHeight = 49,
+        CellHeight = 44,
+        Padding = 16,
+        IconSize = 28,
+    },
+    
+    Animation = {
+        Duration = 0.35,
+        EasingStyle = Enum.EasingStyle.Quart,
+        EasingDirection = Enum.EasingDirection.Out,
+    }
+}
+
+-- 工具函数
+local function CreateRoundedFrame(parent, size, position, color)
+    local frame = Instance.new("Frame")
+    frame.Size = size
+    frame.Position = position
+    frame.BackgroundColor3 = color
+    frame.BorderSizePixel = 0
+    frame.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, IOS_THEME.Sizes.CornerRadius)
+    corner.Parent = frame
+    
+    return frame
+end
+
+-- 触摸反馈效果
+local function AddTouchFeedback(button, callback)
+    local originalColor = button.BackgroundColor3
+    local isPressed = false
+    
+    button.MouseButton1Down:Connect(function()
+        isPressed = true
+        button.BackgroundColor3 = originalColor:Lerp(Color3.new(0, 0, 0), 0.1)
+    end)
+    
+    button.MouseButton1Up:Connect(function()
+        if isPressed then
+            button.BackgroundColor3 = originalColor
+            if callback then
+                callback()
+            end
+        end
+        isPressed = false
+    end)
+    
+    button.MouseLeave:Connect(function()
+        if isPressed then
+            button.BackgroundColor3 = originalColor
+            isPressed = false
+        end
+    end)
+end
+
+-- 主UI类
+function UILibrary.new()
+    local self = setmetatable({}, UILibrary)
+    
+    -- 创建主容器
+    self.ScreenGui = Instance.new("ScreenGui")
+    self.ScreenGui.Name = "iOSUILibrary"
+    self.ScreenGui.ResetOnSpawn = false
+    self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    -- 存储所有创建的组件
+    self.Components = {}
+    self.Theme = IOS_THEME
+    
+    return self
+end
+
+-- 创建窗口
+function UILibrary:CreateWindow(config)
+    config = config or {}
+    local title = config.Title or "iOS Window"
+    local size = config.Size or UDim2.new(0, 350, 0, 500)
+    
+    -- 主窗口容器
+    local window = CreateRoundedFrame(
+        self.ScreenGui,
+        size,
+        UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2),
+        self.Theme.Colors.SecondaryBackground
+    )
+    
+    -- 添加阴影
+    local shadow = Instance.new("ImageLabel")
+    shadow.Name = "Shadow"
+    shadow.BackgroundTransparency = 1
+    shadow.Position = UDim2.new(0, -15, 0, -15)
+    shadow.Size = UDim2.new(1, 30, 1, 30)
+    shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+    shadow.ImageColor3 = Color3.new(0, 0, 0)
+    shadow.ImageTransparency = 0.8
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(10, 10, 10, 10)
+    shadow.Parent = window
+    
+    -- 导航栏
+    local navBar = Instance.new("Frame")
+    navBar.Name = "NavigationBar"
+    navBar.Size = UDim2.new(1, 0, 0, self.Theme.Sizes.NavigationBarHeight)
+    navBar.BackgroundColor3 = self.Theme.Colors.SecondaryBackground
+    navBar.BorderSizePixel = 0
+    navBar.Parent = window
+    
+    -- 导航栏分隔线
+    local separator = Instance.new("Frame")
+    separator.Size = UDim2.new(1, 0, 0, 1)
+    separator.Position = UDim2.new(0, 0, 1, -1)
+    separator.BackgroundColor3 = self.Theme.Colors.Separator
+    separator.BorderSizePixel = 0
+    separator.Parent = navBar
+    
+    -- 标题
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "Title"
+    titleLabel.Size = UDim2.new(1, -100, 1, 0)
+    titleLabel.Position = UDim2.new(0, 50, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Font = self.Theme.Fonts.Bold
+    titleLabel.Text = title
+    titleLabel.TextColor3 = self.Theme.Colors.Label
+    titleLabel.TextSize = 17
+    titleLabel.Parent = navBar
+    
+    -- 内容区域
+    local content = Instance.new("ScrollingFrame")
+    content.Name = "Content"
+    content.Size = UDim2.new(1, 0, 1, -self.Theme.Sizes.NavigationBarHeight)
+    content.Position = UDim2.new(0, 0, 0, self.Theme.Sizes.NavigationBarHeight)
+    content.BackgroundTransparency = 1
+    content.BorderSizePixel = 0
+    content.ScrollBarThickness = 3
+    content.ScrollBarImageColor3 = self.Theme.Colors.TertiaryLabel
+    content.Parent = window
+    
+    -- 添加拖动功能
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+    
+    navBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = window.Position
+        end
+    end)
+    
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or
+                        input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            window.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+    
+    game:GetService("UserInputService").InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    
+    local windowComponent = {
+        Frame = window,
+        Content = content,
+        NavBar = navBar,
+        Title = titleLabel,
+    }
+    
+    table.insert(self.Components, windowComponent)
+    return windowComponent
+end
+
+-- 创建按钮
+function UILibrary:CreateButton(parent, config)
+    config = config or {}
+    local text = config.Text or "Button"
+    local callback = config.Callback
+    local size = config.Size or UDim2.new(1, -32, 0, 44)
+    local position = config.Position or UDim2.new(0, 16, 0, 0)
+    
+    local button = Instance.new("TextButton")
+    button.Size = size
+    button.Position = position
+    button.BackgroundColor3 = self.Theme.Colors.SystemBlue
+    button.Font = self.Theme.Fonts.Medium
+    button.Text = text
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.TextSize = 17
+    button.AutoButtonColor = false
+    button.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, self.Theme.Sizes.CornerRadius)
+    corner.Parent = button
+    
+    AddTouchFeedback(button, callback)
+    
+    return button
+end
+
+-- 部署到执行环境
+function UILibrary:Deploy()
+    local success, parent = pcall(function()
+        return game:GetService("CoreGui")
+    end)
+    
+    if not success then
+        parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    end
+    
+    self.ScreenGui.Parent = parent
+    return self
+end
+
+return UILibrary
